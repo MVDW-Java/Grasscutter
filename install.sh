@@ -35,7 +35,7 @@ valid_ip() {
         return $stat
 }
 
-# Checks for supported installer(s) (only apt-get and pacman right now, might add more in the future)
+# Checks for supported installer(s) (only apt-get, pacman and dnf right now, might add more in the future)
 if is_command apt-get ; then
         echo -e "Supported package manager found (apt-get)\n"
 
@@ -48,6 +48,12 @@ elif is_command pacman ; then
         GC_DEPS="jre17-openjdk"
         INSTALLER_DEPS="curl wget openssl unzip git base-devel" # curl is still a dependency here in order to successfully build mongodb
         SYSTEM="arch" # Arch for the elitists :P
+elif is_command dnf ; then
+        echo -e "supported package manager found (dnf)\n"
+
+        GC_DEPS="java-17-openjdk-devel"
+        INSTALLER_DEPS="wget openssl unzip git"
+        SYSTEM="redhat" # Red Hat-based (CentOS, Fedora)
 else
         echo "No supported package manager found"
         exit
@@ -85,6 +91,7 @@ echo "Updating package cache..."
 case $SYSTEM in # More concise than if
         deb ) apt-get update -qq;;
         arch ) pacman -Syy;;
+        redhat ) dnf update -y -q;;
 esac
 
 # Starts installing dependencies
@@ -92,6 +99,7 @@ echo "Installing setup dependencies..."
 case $SYSTEM in # These are one-liners anyways
         deb ) apt-get -qq install $INSTALLER_DEPS -y;;
         arch ) pacman -Sq --noconfirm --needed $INSTALLER_DEPS > /dev/null;;
+        redhat ) dnf install $INSTALLER_DEPS -y -q;;
 esac
 echo "Done"
 
@@ -99,6 +107,7 @@ echo "Installing grasscutter dependencies..."
 case $SYSTEM in
         deb) apt-get -qq install $GC_DEPS -y > /dev/null;;
         arch ) pacman -Sq --noconfirm --needed $GC_DEPS > /dev/null;;
+        redhat ) dnf install $GC_DEPS -y -q > /dev/null;;
 esac
 # *sighs* here we go...
 INST_ARCH_MONGO="no"
